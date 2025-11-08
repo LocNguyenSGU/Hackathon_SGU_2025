@@ -20,6 +20,7 @@ function App() {
                     Toggle
                 </button>
             </div>
+            <div className="text-blue-400">aaa</div>
         </div>
     );
 }
