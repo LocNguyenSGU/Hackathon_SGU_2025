@@ -17,7 +17,7 @@ function App() {
                     onClick={toggleTheme}
                     className="mt-2 w-full rounded-none bg-bgColor p-2 text-center text-2xl uppercase tracking-[3px] text-textColor transition-all duration-300 ease-in-out hover:rounded-lg"
                 >
-                    Toggle
+                    Togglecxxxx
                 </button>
             </div>
             <div className="text-blue-400">aaa</div>
