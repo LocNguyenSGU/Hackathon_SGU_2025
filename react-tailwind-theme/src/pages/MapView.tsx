@@ -10,7 +10,8 @@ import {
 import { MapPin, Navigation, Clock, DollarSign, X } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-// Fix for default marker icons in react-leaflet
+
+// Sửa lỗi cho icon marker mặc định trong react-leaflet
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
     iconRetinaUrl:
@@ -20,7 +21,8 @@ L.Icon.Default.mergeOptions({
     shadowUrl:
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
-// Map style controller component
+
+// Component điều khiển kiểu bản đồ
 const MapStyleController = ({ style, onChange }) => {
     const map = useMap()
     useEffect(() => {
@@ -42,7 +44,8 @@ const MapStyleController = ({ style, onChange }) => {
     }, [style, map])
     return null
 }
-// Fly to marker controller
+
+// Điều khiển bay đến marker
 const FlyToMarker = ({ position, zoom }) => {
     const map = useMap()
     useEffect(() => {
@@ -54,7 +57,8 @@ const FlyToMarker = ({ position, zoom }) => {
     }, [position, zoom, map])
     return null
 }
-// Helper functions - MUST be defined before MapView component
+
+// Hàm trợ giúp - PHẢI được định nghĩa trước component MapView
 const getTypeColor = (type) => {
     const colors = {
         Adventure: '#FF6B6B',
@@ -65,6 +69,7 @@ const getTypeColor = (type) => {
     }
     return colors[type] || '#95A5A6'
 }
+
 const getTypeIcon = (type) => {
     const icons = {
         Adventure: '🎢',
@@ -75,119 +80,66 @@ const getTypeIcon = (type) => {
     }
     return icons[type] || '📍'
 }
+
 const formatPrice = (price) => {
-    if (price === 0) return 'Free'
+    if (price === 0) return 'Miễn phí'
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND',
         maximumFractionDigits: 0,
     }).format(price)
 }
-// Main component
+
+// Component chính
 const MapView = () => {
     const [hoveredMarker, setHoveredMarker] = useState(null)
     const [selectedMarker, setSelectedMarker] = useState(null)
     const [mapStyle, setMapStyle] = useState('light')
     const [flyToPosition, setFlyToPosition] = useState(null)
-    // Sample data from your API
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
-    const apiData = {
-        route: [
-            {
-                id: 15,
-                name: 'Landmark 81 Skyview',
-                type: 'Adventure',
-                latitude: 10.7946,
-                longitude: 106.7217,
-                location_address:
-                    '720A Đ. Điện Biên Phủ, Vinhomes Tân Cảng, Bình Thạnh, TP.HCM',
-                price: 250000,
-                visit_time: 90,
-                travel_time: 4,
-                opening_hours: '09:00-22:00',
-                facilities: ['parking', 'restroom', 'wifi', 'restaurant'],
-            },
-            {
-                id: 7,
-                name: 'Bitexco Financial Tower - Saigon Skydeck',
-                type: 'Adventure',
-                latitude: 10.7717,
-                longitude: 106.7038,
-                location_address: '36 Hồ Tung Mậu, Bến Nghé, Quận 1, TP.HCM',
-                price: 200000,
-                visit_time: 90,
-                travel_time: 4,
-                opening_hours: '09:30-21:30',
-                facilities: ['parking', 'restroom', 'wifi', 'restaurant'],
-            },
-            {
-                id: 1,
-                name: 'Nhà Thờ Đức Bà',
-                type: 'Cultural',
-                latitude: 10.7797,
-                longitude: 106.699,
-                location_address: '01 Công xã Paris, Bến Nghé, Quận 1, TP.HCM',
-                price: 0,
-                visit_time: 60,
-                travel_time: 1,
-                opening_hours: '08:00-17:00',
-                facilities: ['parking', 'restroom'],
-            },
-            {
-                id: 11,
-                name: 'Bưu Điện Trung Tâm Sài Gòn',
-                type: 'Cultural',
-                latitude: 10.7798,
-                longitude: 106.6995,
-                location_address: '02 Công xã Paris, Bến Nghé, Quận 1, TP.HCM',
-                price: 0,
-                visit_time: 45,
-                travel_time: 0,
-                opening_hours: '07:00-19:00',
-                facilities: ['restroom', 'wifi', 'shop'],
-            },
-            {
-                id: 6,
-                name: 'Công Viên Tao Đàn',
-                type: 'Relaxation',
-                latitude: 10.7823,
-                longitude: 106.6918,
-                location_address: 'Đường Trương Định, Phường Bến Thành, Quận 1, TP.HCM',
-                price: 0,
-                visit_time: 60,
-                travel_time: 1,
-                opening_hours: '05:00-21:00',
-                facilities: ['restroom', 'parking'],
-            },
-        ],
+    let apiData
+    const tourRouteStr = localStorage.getItem('tourRoute');
+
+    if (tourRouteStr) {
+        const tourRoute = JSON.parse(tourRouteStr);
+        console.log("tourRoute", tourRoute.route);
+        apiData = tourRoute
+    } else {
+        console.warn("Không có dữ liệu tourRoute trong localStorage");
     }
-    // Process destinations with additional properties
+
+    // Xử lý các điểm đến với thuộc tính bổ sung
     const destinations = apiData.route.map((dest, index) => ({
         ...dest,
         color: getTypeColor(dest.type),
         icon: getTypeIcon(dest.type),
+        image: dest.images[0] || 'https://via.placeholder.com/100',
         order: index + 1,
     }))
+
     const handleSelectDestination = (dest) => {
         setSelectedMarker(dest.id === selectedMarker ? null : dest.id)
         if (dest.id !== selectedMarker) {
             setFlyToPosition([dest.latitude, dest.longitude])
         }
     }
+
     const selectedDestination = destinations.find((d) => d.id === selectedMarker)
     const hoveredDestination = destinations.find((d) => d.id === hoveredMarker)
-    // Create polyline coordinates for the route
+
+    // Tạo tọa độ đường đi cho tuyến đường
     const routeCoordinates = destinations.map((dest) => [
         dest.latitude,
         dest.longitude,
     ])
+
     return (
         <div className="relative w-full h-screen bg-gray-100 ">
-            {/* Map Container */}
+            {/* Container bản đồ */}
             <MapContainer
                 center={[10.7769, 106.7009]}
                 zoom={13}
@@ -204,11 +156,11 @@ const MapView = () => {
                     maxZoom={19}
                     subdomains="abcd"
                 />
-                {/* Style controller */}
+                {/* Điều khiển kiểu bản đồ */}
                 <MapStyleController style={mapStyle} onChange={setMapStyle} />
-                {/* Fly to controller */}
+                {/* Điều khiển bay đến vị trí */}
                 {flyToPosition && <FlyToMarker position={flyToPosition} zoom={16} />}
-                {/* Route line */}
+                {/* Đường đi */}
                 <Polyline
                     positions={routeCoordinates}
                     pathOptions={{
@@ -219,9 +171,9 @@ const MapView = () => {
                         lineJoin: 'round',
                     }}
                 />
-                {/* Markers */}
+                {/* Các marker */}
                 {destinations.map((dest) => {
-                    // Create custom icon
+                    // Tạo icon tùy chỉnh
                     const customIcon = L.divIcon({
                         html: `
               <div class="custom-marker-wrapper">
@@ -241,7 +193,21 @@ const MapView = () => {
                   transition: all 0.3s ease;
                   ${hoveredMarker === dest.id || selectedMarker === dest.id ? 'transform: scale(1.1);' : ''}
                 ">
-                  ${dest.icon}
+                  <img src="${dest.image}" alt="${dest.name}" style="
+                    width: 48px;
+                    height: 48px;
+                    background: white;
+                    border: 3px solid ${dest.color};
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 20px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    cursor: pointer;
+                    position: relative;
+                    transition: all 0.3s ease;
+                  ">
                   <div style="
                     position: absolute;
                     top: -8px;
@@ -295,48 +261,48 @@ const MapView = () => {
                     )
                 })}
             </MapContainer>
-            {/* Top Info Panel */}
-            <div className="absolute top-4 left-4 right-4 md:left-6 md:right-auto md:max-w-sm bg-white rounded-xl shadow-xl p-4 z-[1000]">
-                <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-bold text-gray-900">Your Itinerary</h2>
-                    <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
-              {destinations.length} stops
-            </span>
+
+            {/* Danh sách điểm đến */}
+            <div className="absolute bottom-16 left-4 md:left-6 bg-white rounded-xl shadow-xl max-w-sm max-h-[400px] overflow-y-auto z-[1000]">
+                <div className='p-6'>
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900">Lộ trình của bạn</h2>
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                                {destinations.length} điểm
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                        <div className="text-gray-500 text-xs">Total Time</div>
-                        <div className="font-bold text-gray-900">
-                            {Math.floor(
-                                apiData.route.reduce(
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="bg-gray-50 rounded-lg p-2">
+                            <div className="text-gray-500 text-xs">Tổng thời gian</div>
+                            <div className="font-bold text-gray-900">
+                                {Math.floor(
+                                    apiData.route.reduce(
+                                        (sum, d) => sum + d.visit_time + d.travel_time,
+                                        0,
+                                    ) / 60,
+                                )}
+                                giờ{' '}
+                                {apiData.route.reduce(
                                     (sum, d) => sum + d.visit_time + d.travel_time,
                                     0,
-                                ) / 60,
-                            )}
-                            h{' '}
-                            {apiData.route.reduce(
-                                (sum, d) => sum + d.visit_time + d.travel_time,
-                                0,
-                            ) % 60}
-                            m
+                                ) % 60}
+                                phút
+                            </div>
                         </div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                        <div className="text-gray-500 text-xs">Total Cost</div>
-                        <div className="font-bold text-gray-900">
-                            {formatPrice(apiData.route.reduce((sum, d) => sum + d.price, 0))}
+                        <div className="bg-gray-50 rounded-lg p-2">
+                            <div className="text-gray-500 text-xs">Tổng chi phí</div>
+                            <div className="font-bold text-gray-900">
+                                {formatPrice(apiData.route.reduce((sum, d) => sum + d.price, 0))}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {/* Destinations List */}
-            <div className="absolute top-32 left-4 md:left-6 bg-white rounded-xl shadow-xl max-w-sm max-h-[calc(100vh-200px)] overflow-y-auto z-[1000]">
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 rounded-t-xl">
-                    <h3 className="font-semibold text-gray-900">Route Stops</h3>
+                    <h3 className="font-semibold text-gray-900">Các điểm dừng</h3>
                 </div>
-                <div className="divide-y divide-gray-100">
+                <div className=" divide-gray-100 h-[400px]">
                     {destinations.map((dest) => (
                         <div
                             key={dest.id}
@@ -361,14 +327,14 @@ const MapView = () => {
                                             {dest.order}. {dest.name}
                                         </h4>
                                         <span className="flex-shrink-0 text-xs font-semibold text-gray-600">
-                      {formatPrice(dest.price)}
-                    </span>
+                                            {formatPrice(dest.price)}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                        {dest.visit_time}m
-                    </span>
+                                        <span className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {dest.visit_time} phút
+                                        </span>
                                         <span
                                             className="px-2 py-0.5 rounded-full text-xs font-medium"
                                             style={{
@@ -376,8 +342,8 @@ const MapView = () => {
                                                 color: dest.color,
                                             }}
                                         >
-                      {dest.type}
-                    </span>
+                                            {dest.type}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -385,7 +351,8 @@ const MapView = () => {
                     ))}
                 </div>
             </div>
-            {/* Zoom Controls */}
+
+            {/* Điều khiển zoom */}
             <div className="absolute bottom-6 right-6 bg-white rounded-lg shadow-xl overflow-hidden z-[1000]">
                 <button
                     onClick={() =>
@@ -404,30 +371,32 @@ const MapView = () => {
                     <span className="text-2xl font-bold text-gray-700">−</span>
                 </button>
             </div>
-            {/* Map Style Switcher */}
+
+            {/* Chuyển đổi kiểu bản đồ */}
             <div className="absolute bottom-6 left-4 md:left-6 bg-white rounded-lg shadow-xl p-2 z-[1000]">
                 <div className="flex gap-2">
                     <button
                         onClick={() => setMapStyle('light')}
                         className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'light' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
-                        Light
+                        Sáng
                     </button>
                     <button
                         onClick={() => setMapStyle('dark')}
                         className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'dark' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
-                        Dark
+                        Tối
                     </button>
                     <button
                         onClick={() => setMapStyle('satellite')}
                         className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'satellite' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
-                        Satellite
+                        Vệ tinh
                     </button>
                 </div>
             </div>
-            {/* Detail Modal */}
+
+            {/* Modal chi tiết */}
             {selectedDestination && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4 z-[2000]">
                     <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -458,7 +427,7 @@ const MapView = () => {
                                     <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <div className="text-sm font-medium text-gray-900">
-                                            Address
+                                            Địa chỉ
                                         </div>
                                         <div className="text-sm text-gray-600">
                                             {selectedDestination.location_address}
@@ -469,7 +438,7 @@ const MapView = () => {
                                     <Clock className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <div className="text-sm font-medium text-gray-900">
-                                            Opening Hours
+                                            Giờ mở cửa
                                         </div>
                                         <div className="text-sm text-gray-600">
                                             {selectedDestination.opening_hours}
@@ -480,7 +449,7 @@ const MapView = () => {
                                     <DollarSign className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <div className="text-sm font-medium text-gray-900">
-                                            Entry Fee
+                                            Giá vé
                                         </div>
                                         <div className="text-sm text-gray-600">
                                             {formatPrice(selectedDestination.price)}
@@ -491,17 +460,17 @@ const MapView = () => {
                                     <Navigation className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <div className="text-sm font-medium text-gray-900">
-                                            Visit Duration
+                                            Thời gian tham quan
                                         </div>
                                         <div className="text-sm text-gray-600">
-                                            {selectedDestination.visit_time} minutes
+                                            {selectedDestination.visit_time} phút
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div>
                                 <div className="text-sm font-medium text-gray-900 mb-2">
-                                    Facilities
+                                    Tiện ích
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedDestination.facilities.map((facility, idx) => (
@@ -509,8 +478,8 @@ const MapView = () => {
                                             key={idx}
                                             className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
                                         >
-                      {facility}
-                    </span>
+                                            {facility}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -526,7 +495,7 @@ const MapView = () => {
                                     backgroundColor: selectedDestination.color,
                                 }}
                             >
-                                Get Directions
+                                Chỉ đường
                             </button>
                         </div>
                     </div>
@@ -565,4 +534,5 @@ const MapView = () => {
         </div>
     )
 }
+
 export default MapView

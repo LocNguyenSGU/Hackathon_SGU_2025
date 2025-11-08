@@ -96,7 +96,7 @@ export default function Quiz() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ answers }),
-      })
+      }) 
 
       const result = await response.json()
       console.log(result)

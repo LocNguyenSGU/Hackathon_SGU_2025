@@ -15,6 +15,8 @@ import Register from "../pages/Register";
 import VRPage from "../pages/VRPage";
 import WeatherWidget from "../pages/WeatherWidget";
 import MapView from "../pages/MapView";
+import Destinations from "../pages/Admin/Destinations";
+import TourRecommendations from "../pages/TourRecommendations";
 
 // Admin pages
 
@@ -31,6 +33,7 @@ export const router = createBrowserRouter([
 			{ path: "vr", element: <VRPage /> },
 			{ path: "weather", element: <WeatherWidget /> },
 			{ path: "map", element: <MapView /> },
+			{ path: "tour-recommendations", element: <TourRecommendations /> },
 		],
 	},
 	{
@@ -54,6 +57,7 @@ export const router = createBrowserRouter([
 			{ path: "dashboard", element: <Dashboard /> }, // ✅ thêm dòng này
 			{ path: "tours", element: <Tours /> },
 			{ path: "users", element: <Users /> },
+			{ path: "destinations", element: <Destinations /> },
 		],
 	},
 

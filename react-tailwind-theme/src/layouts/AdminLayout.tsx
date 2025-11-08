@@ -11,7 +11,8 @@ import {
 	Settings,
 	LogOut,
 	ChevronDown,
-	User
+	User,
+	Globe2
 } from 'lucide-react'
 
 export default function AdminLayout() {
@@ -25,6 +26,11 @@ export default function AdminLayout() {
 			title: 'Dashboard',
 			icon: LayoutDashboard,
 			path: '/admin/dashboard',
+		},
+		{
+			title: "Destinations",
+			icon: Globe2, 
+			path: "/admin/destinations",
 		},
 		{
 			title: 'Tours',
