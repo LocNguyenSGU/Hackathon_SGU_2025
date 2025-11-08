@@ -96,6 +96,8 @@ const MapView = () => {
     const [selectedMarker, setSelectedMarker] = useState(null)
     const [mapStyle, setMapStyle] = useState('light')
     const [flyToPosition, setFlyToPosition] = useState(null)
+    // Added state to toggle VR view
+    const [showVR, setShowVR] = useState(false)
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -122,6 +124,8 @@ const MapView = () => {
     }))
 
     const handleSelectDestination = (dest) => {
+        // Reset VR view when selecting/deselecting a destination
+        setShowVR(false)
         setSelectedMarker(dest.id === selectedMarker ? null : dest.id)
         if (dest.id !== selectedMarker) {
             setFlyToPosition([dest.latitude, dest.longitude])
@@ -399,19 +403,23 @@ const MapView = () => {
             {/* Modal chi tiết */}
             {selectedDestination && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4 z-[2000]">
-                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl mx-4">
                         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {selectedDestination.name}
                             </h3>
                             <button
-                                onClick={() => setSelectedMarker(null)}
+                                onClick={() => {
+                                    // Close modal and also ensure VR is closed
+                                    setSelectedMarker(null)
+                                    setShowVR(false)
+                                }}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-8 space-y-4">
                             <div
                                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold"
                                 style={{
@@ -483,6 +491,35 @@ const MapView = () => {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* VR Button + iframe */}
+                            <div>
+                                <button
+                                    onClick={() => setShowVR((v) => !v)}
+                                    disabled={!selectedDestination.images?.[1]}
+                                    className="w-full py-3 rounded-lg font-semibold transition-all hover:shadow-lg mb-2"
+                                    style={{
+                                        backgroundColor: selectedDestination.images?.[1] ? selectedDestination.color : '#cccccc',
+                                        color: 'white',
+                                    }}
+                                >
+                                    {selectedDestination.images?.[1] ? (showVR ? 'Đóng VR' : 'Xem VR') : 'VR không có'}
+                                </button>
+
+                                {showVR && selectedDestination.images?.[1] && (
+                                    <div className="w-full flex justify-center">
+                                        <iframe
+                                            src={selectedDestination.images?.[1]} // lấy link embed từ phần tử thứ 2 của mảng
+                                            style={{ border: 0, width: '100%', height: 480 }}
+                                            allowFullScreen
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                            title="VR Experience"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
                             <button
                                 onClick={() => {
                                     window.open(
@@ -536,3 +573,4 @@ const MapView = () => {
 }
 
 export default MapView
+
