@@ -1,580 +1,563 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
-	Trophy,
-	MapPin,
-	Sparkles,
-	Target,
-	Clock,
-	DollarSign,
-	Navigation,
-	Star,
-	Calendar,
-	Users,
-	ArrowRight,
-	Share2,
-	RotateCcw,
-	Loader2,
-	Map as MapIcon,
-	Info,
-	Wifi,
-	Car,
-	Utensils,
-	Coffee,
-	AlertCircle
-} from 'lucide-react'
-
-interface Location {
-	id: number
-	name: string
-	type: string
-	latitude: number
-	longitude: number
-	location_address: string
-	price: number
-	visit_time: number
-	travel_time: number
-	score: number
-	opening_hours: string
-	facilities: string[]
+    MapContainer,
+    TileLayer,
+    Marker,
+    Popup,
+    Polyline,
+    useMap,
+} from 'react-leaflet'
+import { MapPin, Navigation, Clock, DollarSign, X } from 'lucide-react'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+// Fix for default marker icons in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl:
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl:
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+// Map style controller component
+const MapStyleController = ({ style, onChange }) => {
+    const map = useMap()
+    useEffect(() => {
+        const tiles = {
+            light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            satellite:
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        }
+        map.eachLayer((layer) => {
+            if (layer instanceof L.TileLayer) {
+                map.removeLayer(layer)
+            }
+        })
+        new L.TileLayer(tiles[style], {
+            maxZoom: 19,
+            subdomains: 'abcd',
+        }).addTo(map)
+    }, [style, map])
+    return null
 }
-
-interface TourRoute {
-	success: boolean
-	route: Location[]
-	total_locations: number
-	total_time: number
-	total_distance: number
-	total_score: number
-	total_cost: number
-	avg_score: number
-	message: string | null
+// Fly to marker controller
+const FlyToMarker = ({ position, zoom }) => {
+    const map = useMap()
+    useEffect(() => {
+        if (position) {
+            map.flyTo(position, zoom, {
+                duration: 1,
+            })
+        }
+    }, [position, zoom, map])
+    return null
 }
-
-interface QuizResult {
-	user_type?: string
-	description?: string
-	score?: number
-	insights?: string[]
-	recommendations?: string[]
-	tour_route?: TourRoute
-	[key: string]: any
+// Helper functions - MUST be defined before MapView component
+const getTypeColor = (type) => {
+    const colors = {
+        Adventure: '#FF6B6B',
+        Cultural: '#4ECDC4',
+        Relaxation: '#95E1D3',
+        Food: '#FFA500',
+        Shopping: '#9B59B6',
+    }
+    return colors[type] || '#95A5A6'
 }
-
-export default function Result() {
-	const navigate = useNavigate()
-	const [result, setResult] = useState<QuizResult | null>(null)
-	const [loading, setLoading] = useState(true)
-	const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
-	const [showMap, setShowMap] = useState(false)
-
-	useEffect(() => {
-		const storedResult = localStorage.getItem('quizResult')
-		if (storedResult) {
-			const parsedResult = JSON.parse(storedResult)
-
-			// Demo data - replace with actual API response
-			const demoTourRoute: TourRoute = {
-				success: true,
-				route: [
-					{
-						id: 15,
-						name: "Landmark 81 Skyview",
-						type: "Adventure",
-						latitude: 10.7946,
-						longitude: 106.7217,
-						location_address: "720A Đ. Điện Biên Phủ, Vinhomes Tân Cảng, Bình Thạnh, TP.HCM",
-						price: 250000,
-						visit_time: 90,
-						travel_time: 4,
-						score: 0.641,
-						opening_hours: "09:00-22:00",
-						facilities: ["parking", "restroom", "wifi", "restaurant"]
-					},
-					{
-						id: 7,
-						name: "Bitexco Financial Tower - Saigon Skydeck",
-						type: "Adventure",
-						latitude: 10.7717,
-						longitude: 106.7038,
-						location_address: "36 Hồ Tung Mậu, Bến Nghé, Quận 1, TP.HCM",
-						price: 200000,
-						visit_time: 90,
-						travel_time: 4,
-						score: 0.641,
-						opening_hours: "09:30-21:30",
-						facilities: ["parking", "restroom", "wifi", "restaurant"]
-					},
-					{
-						id: 20,
-						name: "Chợ Nổi Cái Răng",
-						type: "Adventure",
-						latitude: 10.0377,
-						longitude: 105.7835,
-						location_address: "Cái Răng, Cần Thơ (Tour từ TP.HCM)",
-						price: 500000,
-						visit_time: 360,
-						travel_time: 194,
-						score: 0.573,
-						opening_hours: "05:00-09:00",
-						facilities: ["boat", "guide", "restaurant"]
-					},
-					{
-						id: 13,
-						name: "Chùa Vĩnh Nghiêm",
-						type: "Cultural",
-						latitude: 10.7981,
-						longitude: 106.6833,
-						location_address: "339 Nam Kỳ Khởi Nghĩa, Phường 7, Quận 3, TP.HCM",
-						price: 0,
-						visit_time: 60,
-						travel_time: 194,
-						score: 0.344,
-						opening_hours: "06:00-18:00",
-						facilities: ["parking", "restroom"]
-					},
-					{
-						id: 1,
-						name: "Nhà Thờ Đức Bà",
-						type: "Cultural",
-						latitude: 10.7797,
-						longitude: 106.699,
-						location_address: "01 Công xã Paris, Bến Nghé, Quận 1, TP.HCM",
-						price: 0,
-						visit_time: 60,
-						travel_time: 1,
-						score: 0.344,
-						opening_hours: "08:00-17:00",
-						facilities: ["parking", "restroom"]
-					},
-					{
-						id: 11,
-						name: "Bưu Điện Trung Tâm Sài Gòn",
-						type: "Cultural",
-						latitude: 10.7798,
-						longitude: 106.6995,
-						location_address: "02 Công xã Paris, Bến Nghé, Quận 1, TP.HCM",
-						price: 0,
-						visit_time: 45,
-						travel_time: 0,
-						score: 0.345,
-						opening_hours: "07:00-19:00",
-						facilities: ["restroom", "wifi", "shop"]
-					}
-				],
-				total_locations: 6,
-				total_time: 1210,
-				total_distance: 268.55,
-				total_score: 3.577,
-				total_cost: 950000,
-				avg_score: 0.447,
-				message: null
-			}
-
-			parsedResult.tour_route = demoTourRoute
-			setResult(parsedResult)
-			setLoading(false)
-		} else {
-			navigate('/quiz')
-		}
-	}, [navigate])
-
-	const handleRetakeQuiz = () => {
-		localStorage.removeItem('quizResult')
-		navigate('/quiz')
-	}
-
-	const handleShareResult = () => {
-		if (navigator.share) {
-			navigator.share({
-				title: 'Kết quả trắc nghiệm du lịch',
-				text: `Tôi là ${result?.user_type || 'một du khách'}! Khám phá ${result?.tour_route?.total_locations} địa điểm tuyệt vời tại TP.HCM`,
-				url: window.location.href,
-			})
-		} else {
-			const shareText = `Tôi là ${result?.user_type || 'một du khách'}! Khám phá phong cách du lịch của bạn tại AI Tour Planner`
-			navigator.clipboard.writeText(shareText)
-			alert('Đã sao chép vào clipboard!')
-		}
-	}
-
-	const getFacilityIcon = (facility: string) => {
-		switch (facility.toLowerCase()) {
-			case 'wifi': return <Wifi className="w-4 h-4" />
-			case 'parking':
-			case 'car': return <Car className="w-4 h-4" />
-			case 'restaurant':
-			case 'food': return <Utensils className="w-4 h-4" />
-			case 'cafe':
-			case 'coffee': return <Coffee className="w-4 h-4" />
-			default: return <Info className="w-4 h-4" />
-		}
-	}
-
-	const getTypeColor = (type: string) => {
-		switch (type.toLowerCase()) {
-			case 'adventure': return 'from-orange-500 to-red-500'
-			case 'cultural': return 'from-purple-500 to-pink-500'
-			case 'relaxation': return 'from-green-500 to-teal-500'
-			default: return 'from-blue-500 to-cyan-500'
-		}
-	}
-
-	const formatTime = (minutes: number) => {
-		const hours = Math.floor(minutes / 60)
-		const mins = minutes % 60
-		if (hours > 0) {
-			return `${hours}h ${mins > 0 ? `${mins}m` : ''}`
-		}
-		return `${mins}m`
-	}
-
-	const formatCurrency = (amount: number) => {
-		return new Intl.NumberFormat('vi-VN', {
-			style: 'currency',
-			currency: 'VND'
-		}).format(amount)
-	}
-
-	if (loading) {
-		return (
-			<div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
-				<div className="text-center">
-					<Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto mb-4" />
-					<p className="text-gray-600">Đang tải kết quả...</p>
-				</div>
-			</div>
-		)
-	}
-
-	if (!result) return null
-
-	const tourRoute = result.tour_route
-
-	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12 px-4">
-			<div className="max-w-7xl mx-auto">
-				{/* Hero Section */}
-				<div className="text-center mb-12">
-					<div className="inline-block mb-6">
-						<div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-2xl animate-pulse">
-							<Trophy className="w-12 h-12 text-white" />
-						</div>
-					</div>
-					<h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-						Kết quả của bạn
-					</h1>
-					<div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-600 px-6 py-3 rounded-full text-lg font-semibold">
-						<Sparkles className="w-6 h-6" />
-						<span>Phân tích hoàn tất!</span>
-					</div>
-				</div>
-
-				{/* Personality Type Card */}
-				<div className="bg-gradient-to-br from-emerald-500 to-blue-600 rounded-3xl p-8 md:p-12 text-white mb-8 shadow-2xl">
-					<div className="flex flex-col md:flex-row items-center gap-6">
-						<div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-							<Target className="w-10 h-10" />
-						</div>
-						<div className="text-center md:text-left flex-1">
-							<h2 className="text-3xl md:text-4xl font-bold mb-2">
-								{result.user_type || 'Du khách khám phá'}
-							</h2>
-							<p className="text-white/90 text-lg">
-								{result.description || 'Bạn là người thích khám phá và trải nghiệm những điều mới mẻ'}
-							</p>
-						</div>
-					</div>
-				</div>
-
-				{/* Tour Summary */}
-				{tourRoute && (
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-						<div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-							<div className="flex items-center gap-3 mb-2">
-								<MapPin className="w-6 h-6 text-emerald-600" />
-								<span className="text-sm text-gray-500">Địa điểm</span>
-							</div>
-							<p className="text-3xl font-bold text-gray-900">{tourRoute.total_locations}</p>
-						</div>
-						<div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-							<div className="flex items-center gap-3 mb-2">
-								<Clock className="w-6 h-6 text-blue-600" />
-								<span className="text-sm text-gray-500">Thời gian</span>
-							</div>
-							<p className="text-3xl font-bold text-gray-900">{formatTime(tourRoute.total_time)}</p>
-						</div>
-						<div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-							<div className="flex items-center gap-3 mb-2">
-								<Navigation className="w-6 h-6 text-purple-600" />
-								<span className="text-sm text-gray-500">Quãng đường</span>
-							</div>
-							<p className="text-3xl font-bold text-gray-900">{tourRoute.total_distance.toFixed(1)} km</p>
-						</div>
-						<div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-							<div className="flex items-center gap-3 mb-2">
-								<DollarSign className="w-6 h-6 text-orange-600" />
-								<span className="text-sm text-gray-500">Chi phí</span>
-							</div>
-							<p className="text-2xl font-bold text-gray-900">{formatCurrency(tourRoute.total_cost)}</p>
-						</div>
-					</div>
-				)}
-
-				{/* Map Section */}
-				{tourRoute && tourRoute.route.length > 0 && (
-					<div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8">
-						<div className="flex items-center justify-between mb-6">
-							<div className="flex items-center gap-3">
-								<div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
-									<MapIcon className="w-6 h-6 text-white" />
-								</div>
-								<h3 className="text-2xl font-bold text-gray-900">
-									Lộ trình gợi ý cho bạn
-								</h3>
-							</div>
-							<button
-								onClick={() => setShowMap(!showMap)}
-								className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors flex items-center gap-2"
-							>
-								<MapIcon className="w-4 h-4" />
-								{showMap ? 'Ẩn bản đồ' : 'Xem bản đồ'}
-							</button>
-						</div>
-
-						{/* Map Placeholder */}
-						{showMap && (
-							<div className="mb-6 rounded-xl overflow-hidden border-2 border-gray-200">
-								<div className="relative w-full h-96 bg-gradient-to-br from-blue-100 to-emerald-100">
-									<img
-										src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/106.6297,10.8231,11,0/1200x400@2x?access_token=pk.eyJ1IjoiZHVsYW0xNSIsImEiOiJjbTNsbDA3OWswMDZxMnJvcmFzNTBzZmdwIn0.wkXpIuD7AUvGq0Lx-7j_hQ"
-										alt="Map"
-										className="w-full h-full object-cover"
-									/>
-									<div className="absolute inset-0 flex items-center justify-center bg-black/10">
-										<div className="bg-white/90 backdrop-blur-sm rounded-lg px-6 py-3 shadow-lg">
-											<p className="text-gray-800 font-semibold flex items-center gap-2">
-												<MapPin className="w-5 h-5 text-emerald-600" />
-												{tourRoute.total_locations} điểm đến trên bản đồ
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						)}
-
-						{/* Tour Route Timeline */}
-						<div className="space-y-4">
-							{tourRoute.route.map((location, index) => (
-								<div
-									key={location.id}
-									className="group relative bg-gradient-to-r from-white to-slate-50 rounded-xl p-6 border-2 border-gray-200 hover:border-emerald-500 transition-all duration-300 hover:shadow-xl"
-								>
-									{/* Timeline connector */}
-									{index < tourRoute.route.length - 1 && (
-										<div className="absolute left-8 top-full w-0.5 h-4 bg-gradient-to-b from-emerald-500 to-blue-500 z-10"></div>
-									)}
-
-									<div className="flex gap-6">
-										{/* Step Number */}
-										<div className="flex-shrink-0">
-											<div className={`w-16 h-16 bg-gradient-to-br ${getTypeColor(location.type)} rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
-												{index + 1}
-											</div>
-										</div>
-
-										{/* Content */}
-										<div className="flex-1">
-											<div className="flex items-start justify-between mb-3">
-												<div className="flex-1">
-													<h4 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-emerald-600 transition-colors">
-														{location.name}
-													</h4>
-													<div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-														<MapPin className="w-4 h-4" />
-														<span>{location.location_address}</span>
-													</div>
-												</div>
-												<span className={`px-3 py-1 bg-gradient-to-r ${getTypeColor(location.type)} text-white text-xs font-semibold rounded-full`}>
-													{location.type}
-												</span>
-											</div>
-
-											{/* Info Grid */}
-											<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-												<div className="flex items-center gap-2">
-													<Clock className="w-4 h-4 text-blue-600" />
-													<div>
-														<p className="text-xs text-gray-500">Thời gian tham quan</p>
-														<p className="text-sm font-semibold text-gray-900">{formatTime(location.visit_time)}</p>
-													</div>
-												</div>
-												<div className="flex items-center gap-2">
-													<Navigation className="w-4 h-4 text-purple-600" />
-													<div>
-														<p className="text-xs text-gray-500">Thời gian di chuyển</p>
-														<p className="text-sm font-semibold text-gray-900">{formatTime(location.travel_time)}</p>
-													</div>
-												</div>
-												<div className="flex items-center gap-2">
-													<DollarSign className="w-4 h-4 text-orange-600" />
-													<div>
-														<p className="text-xs text-gray-500">Giá vé</p>
-														<p className="text-sm font-semibold text-gray-900">
-															{location.price === 0 ? 'Miễn phí' : formatCurrency(location.price)}
-														</p>
-													</div>
-												</div>
-												<div className="flex items-center gap-2">
-													<Star className="w-4 h-4 text-yellow-500" />
-													<div>
-														<p className="text-xs text-gray-500">Điểm phù hợp</p>
-														<p className="text-sm font-semibold text-gray-900">{(location.score * 100).toFixed(0)}%</p>
-													</div>
-												</div>
-											</div>
-
-											{/* Opening Hours & Facilities */}
-											<div className="flex flex-wrap items-center gap-4 pt-4 border-t border-gray-200">
-												<div className="flex items-center gap-2 text-sm text-gray-600">
-													<Clock className="w-4 h-4" />
-													<span>Giờ mở cửa: {location.opening_hours}</span>
-												</div>
-												<div className="flex items-center gap-2">
-													{location.facilities.slice(0, 4).map((facility, idx) => (
-														<div
-															key={idx}
-															className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg text-xs text-gray-600"
-															title={facility}
-														>
-															{getFacilityIcon(facility)}
-															<span className="hidden sm:inline">{facility}</span>
-														</div>
-													))}
-													{location.facilities.length > 4 && (
-														<span className="text-xs text-gray-500">+{location.facilities.length - 4} more</span>
-													)}
-												</div>
-											</div>
-
-											{/* View Details Button */}
-											<button
-												onClick={() => setSelectedLocation(location)}
-												className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-											>
-												<Info className="w-4 h-4" />
-												Xem chi tiết
-											</button>
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
-				)}
-
-				{/* Action Buttons */}
-				<div className="grid md:grid-cols-2 gap-4 mb-8">
-					<button
-						onClick={handleRetakeQuiz}
-						className="flex items-center justify-center gap-2 px-6 py-4 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-200 hover:scale-105"
-					>
-						<RotateCcw className="w-5 h-5" />
-						Làm lại trắc nghiệm
-					</button>
-
-					<button
-						onClick={handleShareResult}
-						className="flex items-center justify-center gap-2 px-6 py-4 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all duration-200 hover:scale-105"
-					>
-						<Share2 className="w-5 h-5" />
-						Chia sẻ lộ trình
-					</button>
-				</div>
-
-				{/* CTA Section */}
-				<div className="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-2xl p-8 text-center text-white shadow-2xl">
-					<h3 className="text-3xl font-bold mb-4">
-						Sẵn sàng bắt đầu hành trình?
-					</h3>
-					<p className="text-white/90 text-lg mb-6">
-						{tourRoute ? `${tourRoute.total_locations} địa điểm tuyệt vời đang chờ bạn khám phá!` : 'Khám phá các tour du lịch phù hợp với bạn'}
-					</p>
-					<button
-						onClick={() => navigate('/vr-tour')}
-						className="group px-8 py-4 bg-white text-emerald-600 font-bold rounded-full text-lg hover:scale-105 transition-all duration-200 inline-flex items-center gap-2 shadow-lg"
-					>
-						Trải nghiệm VR 360°
-						<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-					</button>
-				</div>
-			</div>
-
-			{/* Location Detail Modal */}
-			{selectedLocation && (
-				<div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-					<div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-						<div className={`bg-gradient-to-r ${getTypeColor(selectedLocation.type)} p-6 text-white`}>
-							<div className="flex items-start justify-between">
-								<div>
-									<h3 className="text-2xl font-bold mb-2">{selectedLocation.name}</h3>
-									<p className="text-white/90">{selectedLocation.location_address}</p>
-								</div>
-								<button
-									onClick={() => setSelectedLocation(null)}
-									className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-								>
-									<AlertCircle className="w-6 h-6" />
-								</button>
-							</div>
-						</div>
-						<div className="p-6">
-							<div className="grid grid-cols-2 gap-4 mb-6">
-								<div className="bg-gray-50 rounded-lg p-4">
-									<p className="text-sm text-gray-500 mb-1">Giá vé</p>
-									<p className="text-xl font-bold text-gray-900">
-										{selectedLocation.price === 0 ? 'Miễn phí' : formatCurrency(selectedLocation.price)}
-									</p>
-								</div>
-								<div className="bg-gray-50 rounded-lg p-4">
-									<p className="text-sm text-gray-500 mb-1">Thời gian tham quan</p>
-									<p className="text-xl font-bold text-gray-900">{formatTime(selectedLocation.visit_time)}</p>
-								</div>
-								<div className="bg-gray-50 rounded-lg p-4">
-									<p className="text-sm text-gray-500 mb-1">Giờ mở cửa</p>
-									<p className="text-xl font-bold text-gray-900">{selectedLocation.opening_hours}</p>
-								</div>
-								<div className="bg-gray-50 rounded-lg p-4">
-									<p className="text-sm text-gray-500 mb-1">Điểm phù hợp</p>
-									<p className="text-xl font-bold text-gray-900">{(selectedLocation.score * 100).toFixed(0)}%</p>
-								</div>
-							</div>
-
-							<div className="mb-6">
-								<h4 className="font-bold text-gray-900 mb-3">Tiện ích</h4>
-								<div className="flex flex-wrap gap-2">
-									{selectedLocation.facilities.map((facility, idx) => (
-										<div
-											key={idx}
-											className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg"
-										>
-											{getFacilityIcon(facility)}
-											<span className="capitalize">{facility}</span>
-										</div>
-									))}
-								</div>
-							</div>
-
-							<button
-								onClick={() => setSelectedLocation(null)}
-								className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-							>
-								Đóng
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
-		</div>
-	)
+const getTypeIcon = (type) => {
+    const icons = {
+        Adventure: '🎢',
+        Cultural: '🏛️',
+        Relaxation: '🌳',
+        Food: '🍜',
+        Shopping: '🛍️',
+    }
+    return icons[type] || '📍'
 }
+const formatPrice = (price) => {
+    if (price === 0) return 'Free'
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0,
+    }).format(price)
+}
+// Main component
+const MapView = () => {
+    const [hoveredMarker, setHoveredMarker] = useState(null)
+    const [selectedMarker, setSelectedMarker] = useState(null)
+    const [mapStyle, setMapStyle] = useState('light')
+    const [flyToPosition, setFlyToPosition] = useState(null)
+    // Sample data from your API
+    const apiData = {
+        route: [
+            {
+                id: 15,
+                name: 'Landmark 81 Skyview',
+                type: 'Adventure',
+                latitude: 10.7946,
+                longitude: 106.7217,
+                location_address:
+                    '720A Đ. Điện Biên Phủ, Vinhomes Tân Cảng, Bình Thạnh, TP.HCM',
+                price: 250000,
+                visit_time: 90,
+                travel_time: 4,
+                opening_hours: '09:00-22:00',
+                facilities: ['parking', 'restroom', 'wifi', 'restaurant'],
+            },
+            {
+                id: 7,
+                name: 'Bitexco Financial Tower - Saigon Skydeck',
+                type: 'Adventure',
+                latitude: 10.7717,
+                longitude: 106.7038,
+                location_address: '36 Hồ Tung Mậu, Bến Nghé, Quận 1, TP.HCM',
+                price: 200000,
+                visit_time: 90,
+                travel_time: 4,
+                opening_hours: '09:30-21:30',
+                facilities: ['parking', 'restroom', 'wifi', 'restaurant'],
+            },
+            {
+                id: 1,
+                name: 'Nhà Thờ Đức Bà',
+                type: 'Cultural',
+                latitude: 10.7797,
+                longitude: 106.699,
+                location_address: '01 Công xã Paris, Bến Nghé, Quận 1, TP.HCM',
+                price: 0,
+                visit_time: 60,
+                travel_time: 1,
+                opening_hours: '08:00-17:00',
+                facilities: ['parking', 'restroom'],
+            },
+            {
+                id: 11,
+                name: 'Bưu Điện Trung Tâm Sài Gòn',
+                type: 'Cultural',
+                latitude: 10.7798,
+                longitude: 106.6995,
+                location_address: '02 Công xã Paris, Bến Nghé, Quận 1, TP.HCM',
+                price: 0,
+                visit_time: 45,
+                travel_time: 0,
+                opening_hours: '07:00-19:00',
+                facilities: ['restroom', 'wifi', 'shop'],
+            },
+            {
+                id: 6,
+                name: 'Công Viên Tao Đàn',
+                type: 'Relaxation',
+                latitude: 10.7823,
+                longitude: 106.6918,
+                location_address: 'Đường Trương Định, Phường Bến Thành, Quận 1, TP.HCM',
+                price: 0,
+                visit_time: 60,
+                travel_time: 1,
+                opening_hours: '05:00-21:00',
+                facilities: ['restroom', 'parking'],
+            },
+        ],
+    }
+    // Process destinations with additional properties
+    const destinations = apiData.route.map((dest, index) => ({
+        ...dest,
+        color: getTypeColor(dest.type),
+        icon: getTypeIcon(dest.type),
+        order: index + 1,
+    }))
+    const handleSelectDestination = (dest) => {
+        setSelectedMarker(dest.id === selectedMarker ? null : dest.id)
+        if (dest.id !== selectedMarker) {
+            setFlyToPosition([dest.latitude, dest.longitude])
+        }
+    }
+    const selectedDestination = destinations.find((d) => d.id === selectedMarker)
+    const hoveredDestination = destinations.find((d) => d.id === hoveredMarker)
+    // Create polyline coordinates for the route
+    const routeCoordinates = destinations.map((dest) => [
+        dest.latitude,
+        dest.longitude,
+    ])
+    return (
+        <div className="relative w-full h-screen bg-gray-100">
+            {/* Map Container */}
+            <MapContainer
+                center={[10.7769, 106.7009]}
+                zoom={13}
+                className="absolute inset-0 w-full h-full z-0"
+                zoomControl={false}
+                attributionControl={false}
+                dragging={true}
+                touchZoom={true}
+                doubleClickZoom={true}
+                scrollWheelZoom={true}
+            >
+                <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    maxZoom={19}
+                    subdomains="abcd"
+                />
+                {/* Style controller */}
+                <MapStyleController style={mapStyle} onChange={setMapStyle} />
+                {/* Fly to controller */}
+                {flyToPosition && <FlyToMarker position={flyToPosition} zoom={16} />}
+                {/* Route line */}
+                <Polyline
+                    positions={routeCoordinates}
+                    pathOptions={{
+                        color: '#3498db',
+                        weight: 3,
+                        opacity: 0.6,
+                        dashArray: '10, 10',
+                        lineJoin: 'round',
+                    }}
+                />
+                {/* Markers */}
+                {destinations.map((dest) => {
+                    // Create custom icon
+                    const customIcon = L.divIcon({
+                        html: `
+              <div class="custom-marker-wrapper">
+                <div class="custom-marker" style="
+                  width: 48px;
+                  height: 48px;
+                  background: white;
+                  border: 3px solid ${dest.color};
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 20px;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                  cursor: pointer;
+                  position: relative;
+                  transition: all 0.3s ease;
+                  ${hoveredMarker === dest.id || selectedMarker === dest.id ? 'transform: scale(1.1);' : ''}
+                ">
+                  ${dest.icon}
+                  <div style="
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    width: 24px;
+                    height: 24px;
+                    background: ${dest.color};
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    border: 2px solid white;
+                  ">${dest.order}</div>
+                </div>
+                <div style="
+                  position: absolute;
+                  left: 50%;
+                  bottom: -8px;
+                  transform: translateX(-50%);
+                  width: 0;
+                  height: 0;
+                  border-left: 8px solid transparent;
+                  border-right: 8px solid transparent;
+                  border-top: 8px solid ${dest.color};
+                "></div>
+              </div>
+            `,
+                        className: 'custom-leaflet-marker',
+                        iconSize: [48, 56],
+                        iconAnchor: [24, 56],
+                    })
+                    return (
+                        <Marker
+                            key={dest.id}
+                            position={[dest.latitude, dest.longitude]}
+                            icon={customIcon}
+                            eventHandlers={{
+                                click: () => handleSelectDestination(dest),
+                                mouseover: () => setHoveredMarker(dest.id),
+                                mouseout: () => setHoveredMarker(null),
+                            }}
+                        >
+                            <Popup>
+                                <div className="text-sm font-medium">{dest.name}</div>
+                                <div className="text-xs text-gray-600">{dest.type}</div>
+                            </Popup>
+                        </Marker>
+                    )
+                })}
+            </MapContainer>
+            {/* Top Info Panel */}
+            <div className="absolute top-4 left-4 right-4 md:left-6 md:right-auto md:max-w-sm bg-white rounded-xl shadow-xl p-4 z-[1000]">
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-bold text-gray-900">Your Itinerary</h2>
+                    <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+              {destinations.length} stops
+            </span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="text-gray-500 text-xs">Total Time</div>
+                        <div className="font-bold text-gray-900">
+                            {Math.floor(
+                                apiData.route.reduce(
+                                    (sum, d) => sum + d.visit_time + d.travel_time,
+                                    0,
+                                ) / 60,
+                            )}
+                            h{' '}
+                            {apiData.route.reduce(
+                                (sum, d) => sum + d.visit_time + d.travel_time,
+                                0,
+                            ) % 60}
+                            m
+                        </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="text-gray-500 text-xs">Total Cost</div>
+                        <div className="font-bold text-gray-900">
+                            {formatPrice(apiData.route.reduce((sum, d) => sum + d.price, 0))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Destinations List */}
+            <div className="absolute top-32 left-4 md:left-6 bg-white rounded-xl shadow-xl max-w-sm max-h-[calc(100vh-200px)] overflow-y-auto z-[1000]">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 rounded-t-xl">
+                    <h3 className="font-semibold text-gray-900">Route Stops</h3>
+                </div>
+                <div className="divide-y divide-gray-100">
+                    {destinations.map((dest) => (
+                        <div
+                            key={dest.id}
+                            onClick={() => handleSelectDestination(dest)}
+                            onMouseEnter={() => setHoveredMarker(dest.id)}
+                            onMouseLeave={() => setHoveredMarker(null)}
+                            className={`p-3 cursor-pointer transition-all ${hoveredMarker === dest.id || selectedMarker === dest.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div
+                                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl border-2"
+                                    style={{
+                                        borderColor: dest.color,
+                                        backgroundColor: `${dest.color}20`,
+                                    }}
+                                >
+                                    {dest.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <h4 className="font-semibold text-sm text-gray-900 truncate">
+                                            {dest.order}. {dest.name}
+                                        </h4>
+                                        <span className="flex-shrink-0 text-xs font-semibold text-gray-600">
+                      {formatPrice(dest.price)}
+                    </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                        {dest.visit_time}m
+                    </span>
+                                        <span
+                                            className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                            style={{
+                                                backgroundColor: `${dest.color}20`,
+                                                color: dest.color,
+                                            }}
+                                        >
+                      {dest.type}
+                    </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            {/* Zoom Controls */}
+            <div className="absolute bottom-6 right-6 bg-white rounded-lg shadow-xl overflow-hidden z-[1000]">
+                <button
+                    onClick={() =>
+                        document.querySelector('.leaflet-control-zoom-in')?.click()
+                    }
+                    className="w-12 h-12 flex items-center justify-center hover:bg-gray-100 border-b border-gray-200 transition-colors"
+                >
+                    <span className="text-2xl font-bold text-gray-700">+</span>
+                </button>
+                <button
+                    onClick={() =>
+                        document.querySelector('.leaflet-control-zoom-out')?.click()
+                    }
+                    className="w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                >
+                    <span className="text-2xl font-bold text-gray-700">−</span>
+                </button>
+            </div>
+            {/* Map Style Switcher */}
+            <div className="absolute bottom-6 left-4 md:left-6 bg-white rounded-lg shadow-xl p-2 z-[1000]">
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setMapStyle('light')}
+                        className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'light' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                        Light
+                    </button>
+                    <button
+                        onClick={() => setMapStyle('dark')}
+                        className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'dark' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                        Dark
+                    </button>
+                    <button
+                        onClick={() => setMapStyle('satellite')}
+                        className={`px-3 py-2 rounded text-xs font-medium transition-colors ${mapStyle === 'satellite' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                        Satellite
+                    </button>
+                </div>
+            </div>
+            {/* Detail Modal */}
+            {selectedDestination && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4 z-[2000]">
+                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {selectedDestination.name}
+                            </h3>
+                            <button
+                                onClick={() => setSelectedMarker(null)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div
+                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold"
+                                style={{
+                                    backgroundColor: `${selectedDestination.color}20`,
+                                    color: selectedDestination.color,
+                                }}
+                            >
+                                <span className="text-lg">{selectedDestination.icon}</span>
+                                {selectedDestination.type}
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Address
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            {selectedDestination.location_address}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Clock className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Opening Hours
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            {selectedDestination.opening_hours}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <DollarSign className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Entry Fee
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            {formatPrice(selectedDestination.price)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Navigation className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Visit Duration
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            {selectedDestination.visit_time} minutes
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-sm font-medium text-gray-900 mb-2">
+                                    Facilities
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedDestination.facilities.map((facility, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                                        >
+                      {facility}
+                    </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    window.open(
+                                        `https://www.google.com/maps/dir/?api=1&destination=${selectedDestination.latitude},${selectedDestination.longitude}`,
+                                        '_blank',
+                                    )
+                                }}
+                                className="w-full py-3 rounded-lg font-semibold text-white transition-all hover:shadow-lg"
+                                style={{
+                                    backgroundColor: selectedDestination.color,
+                                }}
+                            >
+                                Get Directions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            <style jsx global>{`
+        .custom-leaflet-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+        .custom-marker-wrapper {
+          position: relative;
+        }
+        .custom-marker:hover {
+          transform: scale(1.1);
+        }
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+        .leaflet-container {
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+        }
+      `}</style>
+        </div>
+    )
+}
+export default MapView
