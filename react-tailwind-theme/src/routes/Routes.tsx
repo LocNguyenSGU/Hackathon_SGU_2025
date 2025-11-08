@@ -5,8 +5,6 @@ import AdminLayout from "../layouts/AdminLayout";
 import Home from "../pages/Home";
 import About from "../pages/About";
 import Quiz from "../pages/Quiz";
-import TourVR from "../pages/TourVR";
-import Partner from "../pages/Partner";
 import NotFound from "../pages/NotFound";
 import Result from "../pages/Result";
 import Tours from "../pages/Admin/Tour";
@@ -16,7 +14,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import VRPage from "../pages/VRPage";
 import WeatherWidget from "../pages/WeatherWidget";
-import MapRoute from "../pages/MapRoute";
+import MapView from "../pages/MapView";
 
 // Admin pages
 
@@ -31,9 +29,8 @@ export const router = createBrowserRouter([
 			{ path: "quiz", element: <Quiz /> },
 			{ path: "result", element: <Result /> },
 			{ path: "vr", element: <VRPage /> },
-			{ path: "partner", element: <Partner /> },
 			{ path: "weather", element: <WeatherWidget /> },
-			{ path: "map", element: <MapRoute /> },
+			{ path: "map", element: <MapView /> },
 		],
 	},
 	{

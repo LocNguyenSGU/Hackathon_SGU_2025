@@ -35,7 +35,6 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<Answer[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  // Fetch quiz questions
   useEffect(() => {
     fetchQuestions()
   }, [])
@@ -100,10 +99,9 @@ export default function Quiz() {
       })
 
       const result = await response.json()
-
       console.log(result)
+      console.log(answers)
 
-      // Store result in localStorage and navigate to result page
       localStorage.setItem('quizResult', JSON.stringify(result))
       navigate('/result')
     } catch (error) {
@@ -114,10 +112,10 @@ export default function Quiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-16">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải câu hỏi...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-600 mx-auto mb-3" />
+          <p className="text-gray-600 text-sm">Đang tải câu hỏi...</p>
         </div>
       </div>
     )
@@ -125,7 +123,7 @@ export default function Quiz() {
 
   if (!quizData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-16">
         <div className="text-center">
           <p className="text-gray-600">Không thể tải câu hỏi. Vui lòng thử lại.</p>
         </div>
@@ -138,25 +136,25 @@ export default function Quiz() {
   const answeredCount = answers.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-6 px-4 pt-20">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <Brain className="w-5 h-5" />
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-medium mb-3">
+            <Brain className="w-4 h-4" />
             <span>Trắc nghiệm tâm lý du lịch</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Khám phá phong cách du lịch của bạn
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Khám phá phong cách du lịch
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-sm text-gray-600">
             Giai đoạn {currentPhase}/3 • {answeredCount}/{totalQuestions} câu hỏi
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex gap-2 mb-2">
+        <div className="mb-6">
+          <div className="flex gap-1.5 mb-2">
             {[1, 2, 3].map(phase => {
               const phaseQuestions = quizData.layers[phase.toString()]
               const phaseAnswers = answers.filter(a =>
@@ -167,7 +165,7 @@ export default function Quiz() {
               return (
                 <div
                   key={phase}
-                  className={`flex-1 h-2 rounded-full transition-all duration-300 ${phase < currentPhase
+                  className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${phase < currentPhase
                       ? 'bg-emerald-500'
                       : phase === currentPhase
                         ? 'bg-gray-200'
@@ -195,68 +193,68 @@ export default function Quiz() {
         </div>
 
         {/* Phase Title */}
-        <div className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-2xl p-6 mb-8 text-white">
+        <div className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl p-4 mb-6 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-6 h-6" />
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-lg font-bold">
                 {currentPhase === 1 && 'Giai đoạn 1: Động lực du lịch'}
                 {currentPhase === 2 && 'Giai đoạn 2: Sở thích & Nhu cầu'}
                 {currentPhase === 3 && 'Giai đoạn 3: Phong cách & Quyết định'}
               </h2>
-              <p className="text-white/90">
+              <p className="text-xs text-white/90">
                 {currentQuestions.length} câu hỏi •
-                {currentPhase === 1 && ' Khám phá động lực du lịch của bạn'}
-                {currentPhase === 2 && ' Tìm hiểu sở thích cá nhân'}
-                {currentPhase === 3 && ' Xác định phong cách du lịch'}
+                {currentPhase === 1 && ' Khám phá động lực'}
+                {currentPhase === 2 && ' Tìm hiểu sở thích'}
+                {currentPhase === 3 && ' Xác định phong cách'}
               </p>
             </div>
           </div>
         </div>
 
         {/* Questions */}
-        <div className="space-y-6 mb-8">
+        <div className="space-y-4 mb-6">
           {currentQuestions.map((question, index) => (
             <div
               key={question.id}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
             >
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">
                     {question.question}
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {question.options.map((option, optionIndex) => {
-                      const choice = String.fromCharCode(65 + optionIndex) // A, B, C, D
+                      const choice = String.fromCharCode(65 + optionIndex)
                       const isSelected = getAnswer(question.id) === choice
 
                       return (
                         <button
                           key={optionIndex}
                           onClick={() => handleAnswerSelect(question.id, choice)}
-                          className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${isSelected
+                          className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${isSelected
                               ? 'border-emerald-500 bg-emerald-50'
                               : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
                             }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected
                                   ? 'border-emerald-500 bg-emerald-500'
                                   : 'border-gray-300'
                                 }`}
                             >
                               {isSelected && (
-                                <CheckCircle className="w-4 h-4 text-white" />
+                                <CheckCircle className="w-3 h-3 text-white" />
                               )}
                             </div>
-                            <span className={`${isSelected ? 'text-emerald-900 font-medium' : 'text-gray-700'}`}>
+                            <span className={`text-sm ${isSelected ? 'text-emerald-900 font-medium' : 'text-gray-700'}`}>
                               {option}
                             </span>
                           </div>
@@ -271,71 +269,68 @@ export default function Quiz() {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex gap-4 justify-between items-center">
+        <div className="flex gap-3 justify-between items-center">
           <button
             onClick={handlePrevPhase}
             disabled={currentPhase === 1}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 ${currentPhase === 1
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${currentPhase === 1
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-emerald-500 hover:text-emerald-600'
+                : 'bg-white border border-gray-300 text-gray-700 hover:border-emerald-500'
               }`}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
             Quay lại
           </button>
 
-          <div className="flex gap-4">
-            {/* Submit current phase button */}
+          <div className="flex gap-3">
             {isPhaseComplete(currentPhase) && (
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-full transition-all hover:scale-105 disabled:opacity-50"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Đang xử lý...
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                     Nộp kết quả
                   </>
                 )}
               </button>
             )}
 
-            {/* Continue to next phase button */}
             {currentPhase < 3 && (
               <button
                 onClick={handleNextPhase}
                 disabled={!isPhaseComplete(currentPhase)}
-                className={`flex items-center gap-2 px-8 py-3 rounded-full font-semibold transition-all duration-200 ${isPhaseComplete(currentPhase)
-                    ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white hover:scale-105 shadow-lg'
+                className={`flex items-center gap-1.5 px-6 py-2 rounded-full text-sm font-semibold transition-all ${isPhaseComplete(currentPhase)
+                    ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white hover:scale-105'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
               >
                 Tiếp tục
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             )}
 
-            {/* Final submit button (phase 3) */}
             {currentPhase === 3 && isPhaseComplete(3) && (
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-6 py-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-sm font-semibold rounded-full hover:scale-105 transition-all disabled:opacity-50"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Đang phân tích...
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                     Hoàn thành & Xem kết quả
                   </>
                 )}
@@ -346,8 +341,8 @@ export default function Quiz() {
 
         {/* Help Text */}
         {!isPhaseComplete(currentPhase) && (
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-500">
               💡 Vui lòng trả lời tất cả câu hỏi để tiếp tục
             </p>
           </div>
