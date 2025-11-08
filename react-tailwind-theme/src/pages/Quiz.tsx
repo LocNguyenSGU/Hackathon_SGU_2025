@@ -96,7 +96,7 @@ export default function Quiz() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ answers }),
-      }) 
+      })
 
       const result = await response.json()
       console.log(result)
@@ -145,7 +145,7 @@ export default function Quiz() {
             <span>Trắc nghiệm tâm lý du lịch</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Khám phá phong cách du lịch
+            Khám phá tính cách du lịch
           </h1>
           <p className="text-sm text-gray-600">
             Giai đoạn {currentPhase}/3 • {answeredCount}/{totalQuestions} câu hỏi
@@ -166,10 +166,10 @@ export default function Quiz() {
                 <div
                   key={phase}
                   className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${phase < currentPhase
-                      ? 'bg-emerald-500'
-                      : phase === currentPhase
-                        ? 'bg-gray-200'
-                        : 'bg-gray-200'
+                    ? 'bg-emerald-500'
+                    : phase === currentPhase
+                      ? 'bg-gray-200'
+                      : 'bg-gray-200'
                     }`}
                 >
                   {phase === currentPhase && (
@@ -239,15 +239,15 @@ export default function Quiz() {
                           key={optionIndex}
                           onClick={() => handleAnswerSelect(question.id, choice)}
                           className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${isSelected
-                              ? 'border-emerald-500 bg-emerald-50'
-                              : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
                             }`}
                         >
                           <div className="flex items-center gap-2">
                             <div
                               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected
-                                  ? 'border-emerald-500 bg-emerald-500'
-                                  : 'border-gray-300'
+                                ? 'border-emerald-500 bg-emerald-500'
+                                : 'border-gray-300'
                                 }`}
                             >
                               {isSelected && (
@@ -274,8 +274,8 @@ export default function Quiz() {
             onClick={handlePrevPhase}
             disabled={currentPhase === 1}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${currentPhase === 1
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-white border border-gray-300 text-gray-700 hover:border-emerald-500'
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-white border border-gray-300 text-gray-700 hover:border-emerald-500'
               }`}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -283,7 +283,7 @@ export default function Quiz() {
           </button>
 
           <div className="flex gap-3">
-            {isPhaseComplete(currentPhase) && (
+            {isPhaseComplete(currentPhase) && currentPhase < 3 && (
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
@@ -295,10 +295,10 @@ export default function Quiz() {
                     Đang xử lý...
                   </>
                 ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Nộp kết quả
-                  </>
+                    <>
+                      <Send className="w-4 h-4" />
+                      Nộp kết quả
+                    </>
                 )}
               </button>
             )}
@@ -308,11 +308,11 @@ export default function Quiz() {
                 onClick={handleNextPhase}
                 disabled={!isPhaseComplete(currentPhase)}
                 className={`flex items-center gap-1.5 px-6 py-2 rounded-full text-sm font-semibold transition-all ${isPhaseComplete(currentPhase)
-                    ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white hover:scale-105'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white hover:scale-105'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
               >
-                Tiếp tục
+                Khám phá sâu hơn
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}

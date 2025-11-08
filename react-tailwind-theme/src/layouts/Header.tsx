@@ -71,7 +71,7 @@ export default function Header() {
 	return (
 		<header
 			className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-					? 'bg-slate-900/95 backdrop-blur-lg shadow-lg'
+					? 'bg-slate-800/70 backdrop-blur-lg shadow-lg'
 					: isHomePage
 						? 'bg-transparent'
 						: 'bg-slate-900/95 backdrop-blur-lg shadow-lg'
@@ -88,7 +88,7 @@ export default function Header() {
 							<MapPin className="w-5 h-5 text-white" />
 						</div>
 						<span className="text-lg font-bold text-white">
-							AI Tour Planner
+							Travel Loop
 						</span>
 					</div>
 

@@ -81,6 +81,12 @@ export default function Result() {
 		max_locations: '6'
 	})
 
+	// Budget range state (separate from formData)
+	const [budgetRange, setBudgetRange] = useState({
+		min: '500000',
+		max: '1500000'
+	})
+
 	useEffect(() => {
 		const storedResult = localStorage.getItem('quizResult')
 		if (storedResult) {
@@ -114,6 +120,14 @@ export default function Result() {
 				? prev.filter(t => t !== tagName)
 				: [...prev, tagName]
 		)
+	}
+
+	const handleBudgetRangeChange = (min: string, max: string) => {
+		const minVal = parseInt(min) || 0
+		const maxVal = parseInt(max) || 0
+		const avgBudget = Math.round((minVal + maxVal) / 2)
+		setBudgetRange({ min, max })
+		setFormData({ ...formData, budget: avgBudget.toString() })
 	}
 
 	const handleGetRecommendations = async () => {
@@ -359,7 +373,7 @@ export default function Result() {
 						</div>
 						<div className="flex-1">
 							<h1 className="text-2xl font-bold text-gray-900 mb-2">
-								Bạn là: {result.user_type}
+								Tính cách du lịch của bạn là: {result.user_type}
 							</h1>
 							<p className="text-gray-600">{result.description}</p>
 						</div>
@@ -372,23 +386,71 @@ export default function Result() {
 						<MapIcon className="w-5 h-5 text-emerald-600" />
 						Cấu hình tour
 					</h2>
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div className="space-y-6">
+						{/* Budget Range */}
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Ngân sách (VNĐ)
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								Khoảng ngân sách (VNĐ)
 							</label>
-							<input
-								type="number"
-								value={formData.budget}
-								onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
-								placeholder="1000000"
-							/>
-							<p className="text-xs text-gray-500 mt-1">{formatCurrency(formData.budget)}</p>
+							<div className="grid grid-cols-2 gap-3 mb-3">
+								<div>
+									<input
+										type="number"
+										value={budgetRange.min}
+										onChange={(e) => handleBudgetRangeChange(e.target.value, budgetRange.max)}
+										className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+										placeholder="Tối thiểu"
+									/>
+									<p className="text-xs text-gray-500 mt-1">Tối thiểu: {formatCurrency(budgetRange.min)}</p>
+								</div>
+								<div>
+									<input
+										type="number"
+										value={budgetRange.max}
+										onChange={(e) => handleBudgetRangeChange(budgetRange.min, e.target.value)}
+										className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
+										placeholder="Tối đa"
+									/>
+									<p className="text-xs text-gray-500 mt-1">Tối đa: {formatCurrency(budgetRange.max)}</p>
+								</div>
+							</div>
+							<div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+								<p className="text-sm text-emerald-700">
+									<span className="font-semibold">Ngân sách trung bình:</span> {formatCurrency(formData.budget)}
+								</p>
+							</div>
+							<div className="mt-3 flex flex-wrap gap-2">
+								<button
+									onClick={() => handleBudgetRangeChange('500000', '1000000')}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-700 rounded-lg transition-colors"
+								>
+									500K - 1M
+								</button>
+								<button
+									onClick={() => handleBudgetRangeChange('1000000', '2000000')}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-700 rounded-lg transition-colors"
+								>
+									1M - 2M
+								</button>
+								<button
+									onClick={() => handleBudgetRangeChange('2000000', '5000000')}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-700 rounded-lg transition-colors"
+								>
+									2M - 5M
+								</button>
+								<button
+									onClick={() => handleBudgetRangeChange('5000000', '10000000')}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-700 rounded-lg transition-colors"
+								>
+									5M - 10M
+								</button>
+							</div>
 						</div>
+
+						{/* Time Available */}
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								Thời gian (giờ)
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								Thời gian có sẵn (giờ)
 							</label>
 							<input
 								type="number"
@@ -397,9 +459,37 @@ export default function Result() {
 								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
 								placeholder="8"
 							/>
+							<div className="mt-3 flex flex-wrap gap-2">
+								<button
+									onClick={() => setFormData({ ...formData, time_available: '4' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700 rounded-lg transition-colors"
+								>
+									4 giờ (Nửa ngày)
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, time_available: '8' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700 rounded-lg transition-colors"
+								>
+									8 giờ (Cả ngày)
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, time_available: '12' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700 rounded-lg transition-colors"
+								>
+									12 giờ
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, time_available: '16' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700 rounded-lg transition-colors"
+								>
+									16 giờ (2 ngày)
+								</button>
+							</div>
 						</div>
+
+						{/* Max Locations */}
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Số địa điểm tối đa
 							</label>
 							<input
@@ -409,6 +499,32 @@ export default function Result() {
 								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
 								placeholder="6"
 							/>
+							<div className="mt-3 flex flex-wrap gap-2">
+								<button
+									onClick={() => setFormData({ ...formData, max_locations: '3' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-purple-100 hover:text-purple-700 text-gray-700 rounded-lg transition-colors"
+								>
+									3 điểm (Nhẹ nhàng)
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, max_locations: '5' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-purple-100 hover:text-purple-700 text-gray-700 rounded-lg transition-colors"
+								>
+									5 điểm (Vừa phải)
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, max_locations: '8' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-purple-100 hover:text-purple-700 text-gray-700 rounded-lg transition-colors"
+								>
+									8 điểm (Nhiều)
+								</button>
+								<button
+									onClick={() => setFormData({ ...formData, max_locations: '10' })}
+									className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-purple-100 hover:text-purple-700 text-gray-700 rounded-lg transition-colors"
+								>
+									10 điểm (Khám phá)
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>

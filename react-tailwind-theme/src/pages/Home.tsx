@@ -208,7 +208,7 @@ export default function Home() {
       </section>
 
       {/* VR Showcase */}
-      <section className="py-12 bg-gradient-to-b from-slate-900 to-blue-900 text-white">
+      <section className="py-12 bg-gradient-to-b from-slate-700 to-blue-900 text-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>

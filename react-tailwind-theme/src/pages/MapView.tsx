@@ -171,6 +171,7 @@ const MapView = () => {
                         lineJoin: 'round',
                     }}
                 />
+                
                 {/* Các marker */}
                 {destinations.map((dest) => {
                     // Tạo icon tùy chỉnh
@@ -269,7 +270,7 @@ const MapView = () => {
                         <h2 className="text-lg font-bold text-gray-900">Lộ trình của bạn</h2>
                         <div className="flex items-center gap-2">
                             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
-                                {destinations.length} điểm
+                                {destinations.length} địa điểm
                             </span>
                         </div>
                     </div>
@@ -313,14 +314,25 @@ const MapView = () => {
                         >
                             <div className="flex items-start gap-3">
                                 <div
-                                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl border-2"
+                                    className="flex-shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center overflow-hidden"
                                     style={{
                                         borderColor: dest.color,
                                         backgroundColor: `${dest.color}20`,
                                     }}
                                 >
-                                    {dest.icon}
+                                    <img
+                                        src={dest.image}
+                                        alt={dest.name}
+                                        className="w-full h-full object-cover rounded-full"
+                                        style={{
+                                            border: `3px solid ${dest.color}`,
+                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                            cursor: "pointer",
+                                            transition: "all 0.3s ease",
+                                        }}
+                                    />
                                 </div>
+
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
                                         <h4 className="font-semibold text-sm text-gray-900 truncate">
