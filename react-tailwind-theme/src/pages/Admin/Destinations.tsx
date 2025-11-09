@@ -68,6 +68,8 @@ export default function Destinations() {
 
   const destinationTypes = ['Cultural', 'Adventure', 'Relaxation', 'Entertainment', 'Nature', 'Budget', 'Family']
 
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+
   useEffect(() => {
     fetchDestinations()
   }, [currentPage, searchTerm, filterType])
@@ -75,7 +77,7 @@ export default function Destinations() {
   const fetchDestinations = async () => {
     setLoading(true)
     try {
-      let url = `http://localhost:8000/api/v1/destinations/?page=${currentPage}&page_size=10`
+      let url = `${baseUrl}/api/v1/destinations/?page=${currentPage}&page_size=10`
 
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`
@@ -155,8 +157,8 @@ export default function Destinations() {
 
     try {
       const url = editingDestination
-        ? `http://localhost:8000/api/v1/destinations/${editingDestination.destination_id}`
-        : 'http://localhost:8000/api/v1/destinations'
+        ? `${baseUrl}/api/v1/destinations/${editingDestination.destination_id}`
+        : `${baseUrl}/api/v1/destinations`
 
       const method = editingDestination ? 'PUT' : 'POST'
 
@@ -187,7 +189,7 @@ export default function Destinations() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/destinations/${id}`, {
+      const response = await fetch(`${baseUrl}/api/v1/destinations/${id}`, {
         method: 'DELETE'
       })
 

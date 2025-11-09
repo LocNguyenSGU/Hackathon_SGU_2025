@@ -73,6 +73,7 @@ export default function Result() {
 	const [recommendations, setRecommendations] = useState<TourRecommendation | null>(null)
 	const [showRecommendations, setShowRecommendations] = useState(false)
 	const [submittingRecommendation, setSubmittingRecommendation] = useState(false)
+	const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 	// Form data for tour recommendation
 	const [formData, setFormData] = useState({
@@ -104,7 +105,7 @@ export default function Result() {
 	const fetchTags = async () => {
 		setLoadingTags(true)
 		try {
-			const response = await fetch('http://localhost:8000/api/v1/tags')
+			const response = await fetch(`${baseUrl}/api/v1/tags`)
 			const data = await response.json()
 			setTags(data.tags || [])
 		} catch (error) {
@@ -149,7 +150,7 @@ export default function Result() {
 
 		try {
 			setSubmittingRecommendation(true)
-			const response = await fetch('http://localhost:8000/api/v1/tours/recommend', {
+			const response = await fetch(`${baseUrl}/api/v1/tours/recommend`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

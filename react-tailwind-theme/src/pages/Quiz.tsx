@@ -34,6 +34,7 @@ export default function Quiz() {
   const [currentPhase, setCurrentPhase] = useState(1)
   const [answers, setAnswers] = useState<Answer[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
 
   useEffect(() => {
     fetchQuestions()
@@ -41,7 +42,7 @@ export default function Quiz() {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/v1/quiz/questions')
+      const response = await fetch(`${baseUrl}/quiz/questions`)
       const data = await response.json()
       setQuizData(data)
       setLoading(false)
@@ -90,7 +91,7 @@ export default function Quiz() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/v1/quiz/result', {
+      const response = await fetch(`${baseUrl}/quiz/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

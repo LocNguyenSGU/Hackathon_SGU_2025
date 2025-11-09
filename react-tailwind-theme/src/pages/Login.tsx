@@ -7,6 +7,7 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
+	const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 	const [formData, setFormData] = useState({
 		username: '',
@@ -29,7 +30,7 @@ export default function Login() {
 				client_secret: '',
 			})
 
-			const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+			const response = await fetch(`${baseURL}/api/v1/auth/login`, {
 				method: 'POST',
 				headers: {
 					'accept': 'application/json',

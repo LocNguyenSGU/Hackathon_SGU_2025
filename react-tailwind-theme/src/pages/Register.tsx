@@ -8,6 +8,7 @@ export default function Register() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 	const [success, setSuccess] = useState(false)
+	const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 	const [formData, setFormData] = useState({
 		full_name: '',
@@ -41,7 +42,7 @@ export default function Register() {
 		try {
 			const { confirmPassword, ...registerData } = formData
 
-			const response = await fetch('http://localhost:8000/api/v1/auth/register', {
+			const response = await fetch(`${baseURL}/api/v1/auth/register`, {
 				method: 'POST',
 				headers: {
 					'accept': 'application/json',
