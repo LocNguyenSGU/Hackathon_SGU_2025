@@ -150,7 +150,7 @@ export default function Result() {
 
 		try {
 			setSubmittingRecommendation(true)
-			const response = await fetch(`${baseUrl}/api/v1/tours/recommend`, {
+			const response = await fetch(`${baseUrl}/tours/recommend`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
