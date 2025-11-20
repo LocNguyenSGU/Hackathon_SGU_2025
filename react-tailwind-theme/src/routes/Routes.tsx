@@ -17,6 +17,10 @@ import WeatherWidget from "../pages/WeatherWidget";
 import MapView from "../pages/MapView";
 import Destinations from "../pages/Admin/Destinations";
 import TourRecommendations from "../pages/TourRecommendations";
+import CFDemo from "../pages/CFDemo";
+import UserProfile from "../pages/UserProfile";
+import CFAPITest from "../pages/CFAPITest";
+import VisitsPage from "../pages/VisitsPage";
 
 // Admin pages
 
@@ -33,7 +37,11 @@ export const router = createBrowserRouter([
 			{ path: "vr", element: <VRPage /> },
 			{ path: "weather", element: <WeatherWidget /> },
 			{ path: "map", element: <MapView /> },
-			{ path: "tour-recommendations", element: <TourRecommendations /> },
+			{ path: "tours", element: <TourRecommendations /> },
+			{ path: "cf-demo", element: <CFDemo /> },
+			{ path: "profile", element: <UserProfile /> },
+			{ path: "cf-api-test", element: <CFAPITest /> },
+			{ path: "visits", element: <VisitsPage /> },
 		],
 	},
 	{

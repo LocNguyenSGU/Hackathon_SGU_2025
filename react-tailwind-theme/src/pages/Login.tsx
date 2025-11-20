@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { MapPin, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 
 export default function Login() {
 	const navigate = useNavigate()
@@ -30,7 +30,7 @@ export default function Login() {
 				client_secret: '',
 			})
 
-			const response = await fetch(`${baseURL}/api/v1/auth/login`, {
+			const response = await fetch(`${baseURL}/auth/login`, {
 				method: 'POST',
 				headers: {
 					'accept': 'application/json',
@@ -49,20 +49,27 @@ export default function Login() {
 			// Store token in localStorage
 			localStorage.setItem('access_token', data.access_token)
 			localStorage.setItem('token_type', data.token_type)
+			
+			// Store user information from response
+			localStorage.setItem('cf_user_id', data.user_id.toString())
+			localStorage.setItem('username', data.username)
+			localStorage.setItem('user_role', data.role)
 
-			// Decode JWT to get user info (optional)
-			const payload = JSON.parse(atob(data.access_token.split('.')[1]))
-			localStorage.setItem('user_role', payload.role)
-			localStorage.setItem('username', payload.sub)
+			console.log('✅ Login successful:', {
+				user_id: data.user_id,
+				username: data.username,
+				role: data.role
+			})
 
 			// Redirect based on role
-			if (payload.role === 'admin') {
+			if (data.role === 'admin') {
 				navigate('/admin/dashboard')
 			} else {
 				navigate('/')
 			}
-		} catch (err: any) {
-			setError(err.message || 'An error occurred during login')
+		} catch (err) {
+			const error = err as Error;
+			setError(error.message || 'An error occurred during login')
 		} finally {
 			setLoading(false)
 		}

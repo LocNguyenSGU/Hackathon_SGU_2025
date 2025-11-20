@@ -42,7 +42,7 @@ export default function Register() {
 		try {
 			const { confirmPassword, ...registerData } = formData
 
-			const response = await fetch(`${baseURL}/api/v1/auth/register`, {
+			const response = await fetch(`${baseURL}/auth/register`, {
 				method: 'POST',
 				headers: {
 					'accept': 'application/json',

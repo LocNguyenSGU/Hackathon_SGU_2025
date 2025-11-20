@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
 	MapPin,
@@ -7,7 +7,6 @@ import {
 	Navigation,
 	ArrowRight,
 	Map as MapIcon,
-	Share2,
 	RotateCcw,
 	Loader2,
 	CheckCircle,
@@ -17,6 +16,18 @@ import {
 	ChevronRight,
 	ArrowLeft
 } from 'lucide-react'
+import { FavoriteButton } from '../components/FavoriteButton'
+import { RatingStars } from '../components/RatingStars'
+import { RatingModal } from '../components/RatingModal'
+import { CheckInButton } from '../components/CheckInButton'
+import { ToastContainer } from '../components/Toast'
+import { useFavorites } from '../hooks/useFavorites'
+import { useRatings } from '../hooks/useRatings'
+import { useTracking } from '../hooks/useTracking'
+import { useAutoVisit } from '../hooks/useAutoVisit'
+import { useVisits } from '../hooks/useVisits'
+import { getCurrentUserId } from '../utils/user'
+import { showSuccessToast, showErrorToast } from '../utils/toast'
 
 interface Tag {
 	tag_id: number
@@ -65,6 +76,7 @@ interface TourRecommendation {
 
 export default function Result() {
 	const navigate = useNavigate()
+	const userId = getCurrentUserId()
 	const [result, setResult] = useState<QuizResult | null>(null)
 	const [tags, setTags] = useState<Tag[]>([])
 	const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -74,6 +86,17 @@ export default function Result() {
 	const [showRecommendations, setShowRecommendations] = useState(false)
 	const [submittingRecommendation, setSubmittingRecommendation] = useState(false)
 	const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+
+	// CF states
+	const [showRatingModal, setShowRatingModal] = useState(false)
+	const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
+	
+	// CF hooks
+	const { addFavorite, removeFavorite, isFavorited } = useFavorites(userId)
+	const { ratings, createRating } = useRatings(userId)
+	const { track } = useTracking(userId)
+	const { logQuickVisit } = useAutoVisit(userId)
+	const { logVisit, hasVisited } = useVisits(userId)
 
 	// Form data for tour recommendation
 	const [formData, setFormData] = useState({
@@ -100,6 +123,7 @@ export default function Result() {
 		} else {
 			navigate('/quiz')
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [navigate])
 
 	const fetchTags = async () => {
@@ -129,6 +153,63 @@ export default function Result() {
 		const avgBudget = Math.round((minVal + maxVal) / 2)
 		setBudgetRange({ min, max })
 		setFormData({ ...formData, budget: avgBudget.toString() })
+	}
+
+	// CF Handler Functions with auto-visit
+	const getUserRating = (destinationId: number) => {
+		return ratings.find(r => r.destination_id === destinationId)
+	}
+
+	const handleFavoriteToggle = async (locationId: number) => {
+		try {
+			if (isFavorited(locationId)) {
+				await removeFavorite(locationId)
+				showSuccessToast('Đã xóa khỏi danh sách yêu thích')
+				track(locationId, 'skip')
+			} else {
+				await addFavorite(locationId)
+				showSuccessToast('Đã thêm vào danh sách yêu thích')
+				track(locationId, 'save')
+				// Log quick visit when favoriting
+				logQuickVisit(locationId)
+			}
+		} catch (error) {
+			showErrorToast('Có lỗi xảy ra')
+		}
+	}
+
+	const handleOpenRatingModal = (location: Location) => {
+		setSelectedLocation(location)
+		setShowRatingModal(true)
+		track(location.id, 'click', { action: 'open_rating_modal' })
+		// Log quick visit when opening rating modal
+		logQuickVisit(location.id)
+	}
+
+
+
+	const handleSubmitRating = async (rating: number, reviewText?: string) => {
+		if (!selectedLocation) return
+		
+		try {
+			await createRating(selectedLocation.id, rating, reviewText)
+			showSuccessToast('Đánh giá thành công!')
+			setShowRatingModal(false)
+			setSelectedLocation(null)
+		} catch (error) {
+			showErrorToast('Không thể gửi đánh giá')
+		}
+	}
+
+	const handleCheckIn = async (destinationId: number) => {
+		try {
+			await logVisit(destinationId, new Date(), undefined, true)
+			showSuccessToast('Check-in thành công!')
+			track(destinationId, 'click', { action: 'check_in' })
+		} catch (error) {
+			showErrorToast('Không thể check-in')
+			throw error
+		}
 	}
 
 	const handleGetRecommendations = async () => {
@@ -170,11 +251,11 @@ export default function Result() {
 				} else {
 					console.error("Lỗi khi lấy lộ trình:", recommendationsData);
 					// Nếu là object chứa thông báo lỗi
-					setRecommendations([]);
+					setRecommendations(null);
 					console.warn("Không tìm thấy lộ trình phù hợp:", recommendationsData.detail);
 				}
 			} else {
-				setRecommendations([]);
+				setRecommendations(null);
 			}
 			setShowRecommendations(true)
 		} catch (error) {
@@ -305,20 +386,59 @@ export default function Result() {
 
 						<div className="divide-y divide-gray-100">
 							{
-								recommendations.route && recommendations.route.length > 0 ? recommendations.route.map((location, index) => (
+								recommendations.route && recommendations.route.length > 0 ? recommendations.route.map((location, index) => {
+									const userRating = getUserRating(location.id)
+									const isFav = isFavorited(location.id)
+									
+									return (
 								<div key={location.id} className="p-4 hover:bg-gray-50">
 									<div className="flex gap-4">
 										<div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
 											{index + 1}
 										</div>
 										<div className="flex-1 min-w-0">
-											<h4 className="text-base font-semibold text-gray-900 mb-1">
-												{location.name}
-											</h4>
+											<div className="flex items-start justify-between gap-2 mb-1">
+												<h4 className="text-base font-semibold text-gray-900">
+													{location.name}
+												</h4>
+												<FavoriteButton
+													isFavorited={isFav}
+													onToggle={() => handleFavoriteToggle(location.id)}
+												/>
+											</div>
 											<p className="text-sm text-gray-500 mb-3 flex items-start gap-1">
 												<MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
 												{location.location_address}
 											</p>
+											
+											{/* CF Rating Section */}
+											<div className="flex items-center gap-3 mb-3">
+												<RatingStars
+													initialRating={userRating?.rating || 0}
+													onRate={() => handleOpenRatingModal(location)}
+													size="sm"
+												/>
+												{userRating && (
+													<span className="text-xs text-emerald-600 font-medium">
+														Bạn: {userRating.rating.toFixed(1)} ⭐
+													</span>
+												)}
+												<button
+													onClick={() => handleOpenRatingModal(location)}
+													className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+												>
+													{userRating ? 'Sửa đánh giá' : 'Đánh giá'}
+												</button>
+												<div className="ml-auto">
+													<CheckInButton
+														destinationId={location.id}
+														onCheckIn={handleCheckIn}
+														hasVisited={hasVisited(location.id)}
+														compact={true}
+													/>
+												</div>
+											</div>
+											
 											<div className="flex flex-wrap gap-2 text-xs">
 												<span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded">
 													<Clock className="w-3 h-3" />
@@ -341,7 +461,8 @@ export default function Result() {
 										</div>
 									</div>
 								</div>
-							))
+									)
+								})
 								: (<div className="p-4">
 									<p className="text-gray-500">Không tìm thấy lộ trình phù hợp với yêu cầu của bạn.</p>
 								</div>)}
@@ -358,6 +479,23 @@ export default function Result() {
 						</button>
 					</div>
 				</div>
+
+				{/* Rating Modal - For Recommendations View */}
+				{showRatingModal && selectedLocation && (
+					<RatingModal
+						isOpen={showRatingModal}
+						onClose={() => {
+							setShowRatingModal(false)
+							setSelectedLocation(null)
+						}}
+						onSubmit={handleSubmitRating}
+						destinationName={selectedLocation.name}
+						initialRating={getUserRating(selectedLocation.id)?.rating || 0}
+					/>
+				)}
+
+				{/* Toast Container */}
+				<ToastContainer />
 			</div>
 		)
 	}
@@ -604,6 +742,23 @@ export default function Result() {
 					</button>
 				</div>
 			</div>
+
+			{/* Rating Modal */}
+			{showRatingModal && selectedLocation && (
+				<RatingModal
+					isOpen={showRatingModal}
+					onClose={() => {
+						setShowRatingModal(false)
+						setSelectedLocation(null)
+					}}
+					onSubmit={handleSubmitRating}
+					destinationName={selectedLocation.name}
+					initialRating={getUserRating(selectedLocation.id)?.rating || 0}
+				/>
+			)}
+
+			{/* Toast Container */}
+			<ToastContainer />
 		</div>
 	)
 }
