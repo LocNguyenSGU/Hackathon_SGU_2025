@@ -68,7 +68,7 @@ export default function Destinations() {
 
   const destinationTypes = ['Cultural', 'Adventure', 'Relaxation', 'Entertainment', 'Nature', 'Budget', 'Family']
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+  const baseUrl = '/api/v1'
 
   useEffect(() => {
     fetchDestinations()

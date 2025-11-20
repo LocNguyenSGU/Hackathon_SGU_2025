@@ -85,7 +85,7 @@ export default function Result() {
 	const [recommendations, setRecommendations] = useState<TourRecommendation | null>(null)
 	const [showRecommendations, setShowRecommendations] = useState(false)
 	const [submittingRecommendation, setSubmittingRecommendation] = useState(false)
-	const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+	const baseUrl = '/api/v1'
 
 	// CF states
 	const [showRatingModal, setShowRatingModal] = useState(false)

@@ -7,7 +7,7 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
-	const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+	const baseURL = '/api/v1'
 
 	const [formData, setFormData] = useState({
 		username: '',

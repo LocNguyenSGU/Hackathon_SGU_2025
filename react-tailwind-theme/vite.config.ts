@@ -10,5 +10,18 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    proxy: {
+      '/api': {
+        target: 'http://139.99.103.223:5556',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/cf-api': {
+        target: 'http://139.99.103.223:5556',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/cf-api/, '/api/v1'),
+      },
+    },
   },
 })

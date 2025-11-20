@@ -34,7 +34,7 @@ export default function Quiz() {
   const [currentPhase, setCurrentPhase] = useState(1)
   const [answers, setAnswers] = useState<Answer[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
+  const baseUrl = '/api/v1'
 
   useEffect(() => {
     fetchQuestions()
