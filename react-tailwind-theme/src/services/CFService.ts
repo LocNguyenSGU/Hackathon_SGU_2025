@@ -12,7 +12,7 @@ import type {
 } from '../types/cf.types';
 
 class CollaborativeFilteringService {
-  private baseURL = 'http://localhost:8000/api/v1';
+  private baseURL = 'http://139.99.103.223:5556/api/v1';
 
   // ============ HEALTH CHECK ============
 
