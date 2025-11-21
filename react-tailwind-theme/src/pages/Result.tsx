@@ -129,7 +129,8 @@ export default function Result() {
 	const fetchTags = async () => {
 		setLoadingTags(true)
 		try {
-			const response = await fetch(`${baseUrl}/tags`)
+			console.log("Fetching tags from /api/v1/tags/");
+			const response = await fetch(`${baseUrl}/tags/`)
 			const data = await response.json()
 			setTags(data.tags || [])
 		} catch (error) {
